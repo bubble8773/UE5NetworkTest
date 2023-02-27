@@ -7,6 +7,7 @@
 #include "AbstractNavData.h"
 using namespace FNavigationSystem;
 
+
 ANetworkedAbilityTestGameMode::ANetworkedAbilityTestGameMode()
 {
 	// set default pawn class to our Blueprinted character
@@ -22,8 +23,8 @@ void ANetworkedAbilityTestGameMode::FillWorld(TSubclassOf<AActor> ActorToSpawn, 
 	UNavigationSystemV1* navSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());//UNavigationSystemV1::GetCurrent(GetWorld());
 	FNavLocation result = FNavLocation(Origin);
 	FTransform SpawnTransform;
-	if (navSystem){
-		for (int i = 0; i <= max-1; i++)
+	if (navSystem) {
+		for (int i = 0; i <= max - 1; i++)
 		{
 			if (navSystem->GetRandomReachablePointInRadius(Origin, radius, result)) {
 				SpawnTransform.SetLocation(result.Location);
@@ -33,6 +34,16 @@ void ANetworkedAbilityTestGameMode::FillWorld(TSubclassOf<AActor> ActorToSpawn, 
 			}
 		}
 	}
-	
+
+}
+
+int ANetworkedAbilityTestGameMode::GetCurrentActor_p()
+{
+	return CurrentActors;
+}
+
+void ANetworkedAbilityTestGameMode::SetCurrentActor_p(int value)
+{
+	CurrentActors = value;
 }
 

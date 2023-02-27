@@ -36,7 +36,6 @@ class ANetworkedAbilityTestCharacter : public ACharacter
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
-	
 	/** Attck Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* AttackJump;
@@ -48,6 +47,11 @@ public:
 
 	bool bDisableMovement = false;
 	float NoInputTime;
+	UPROPERTY(BlueprintReadOnly, Replicated)
+	int CollectedCount;
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void CallInteractMessage(AActor* OtherActor);
 
 protected:
 
@@ -56,7 +60,6 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-	
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastAnimationReplication();
 	void MulticastAnimationReplication_Implementation();
@@ -72,8 +75,8 @@ protected:
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
-	void CallInteractMessage(AActor* OtherActor);
+
+	
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -83,7 +86,8 @@ protected:
 
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
+
+
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
