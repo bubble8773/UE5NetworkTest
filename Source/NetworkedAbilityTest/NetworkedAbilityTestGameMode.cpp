@@ -3,10 +3,10 @@
 #include "NetworkedAbilityTestGameMode.h"
 #include "NetworkedAbilityTestCharacter.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Runtime/Core/Public/Async/ParallelFor.h"
 #include "NavigationSystem.h"
 #include "AbstractNavData.h"
 using namespace FNavigationSystem;
-
 
 ANetworkedAbilityTestGameMode::ANetworkedAbilityTestGameMode()
 {
@@ -22,28 +22,42 @@ void ANetworkedAbilityTestGameMode::FillWorld(TSubclassOf<AActor> ActorToSpawn, 
 {
 	UNavigationSystemV1* navSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());//UNavigationSystemV1::GetCurrent(GetWorld());
 	FNavLocation result = FNavLocation(Origin);
-	FTransform SpawnTransform;
+	
 	if (navSystem) {
+
+	
+	/*	for (int i = 0; i < max; i++)
+		{
+			ActorsToSpawn.Add(GetWorld()->SpawnActor<AActor>(ActorToSpawn));
+		}
+		ParallelFor(ActorsToSpawn.Num(), [&](int32 Idx) {
+
+			if (navSystem->GetRandomReachablePointInRadius(Origin, radius, result)) {
+				
+				ActorsToSpawn[Idx]->SetActorLocation(result.Location);
+				
+			}
+		});*/
 		for (int i = 0; i <= max - 1; i++)
 		{
 			if (navSystem->GetRandomReachablePointInRadius(Origin, radius, result)) {
-				SpawnTransform.SetLocation(result.Location);
-				SpawnTransform.SetRotation(FQuat::Identity);
-				SpawnTransform.SetScale3D(FVector::One());
-				GetWorld()->SpawnActor<AActor>(ActorToSpawn, SpawnTransform);
+				ActorsToSpawn.Add(
+				GetWorld()->SpawnActor<AActor>(ActorToSpawn)); //FTransform(FRotator::Euler(), result.Location, FVector::One));
+				ActorsToSpawn[i]->SetActorLocation(result.Location);
 			}
 		}
 	}
 
 }
 
-int ANetworkedAbilityTestGameMode::GetCurrentActor_p()
+void ANetworkedAbilityTestGameMode::RenderBasedOnDistance(FVector PlayerLocation)
 {
-	return CurrentActors;
+	for(int i = 0; i <= ActorsToSpawn.Num()-1; i++)
+	{
+		double distance = FVector::Distance(PlayerLocation, ActorsToSpawn[i]->GetActorLocation());
+		if ( distance > viewDistance)
+		{
+			ActorsToSpawn[i]->SetActorHiddenInGame(true);
+		}
+	}
 }
-
-void ANetworkedAbilityTestGameMode::SetCurrentActor_p(int value)
-{
-	CurrentActors = value;
-}
-

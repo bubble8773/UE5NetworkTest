@@ -36,22 +36,29 @@ class ANetworkedAbilityTestCharacter : public ACharacter
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
-	/** Attck Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* AttackJump;
+	class UInputAction* JumpAttackAction;
 
 public:
 	ANetworkedAbilityTestCharacter();
+	
 	UPROPERTY(EditAnywhere, Replicated)
 	UAnimMontage* AttackJumpMontage;
 
 	bool bDisableMovement = false;
 	float NoInputTime;
-	UPROPERTY(BlueprintReadOnly, Replicated)
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_UpdateUI)
 	int CollectedCount;
 
+	UFUNCTION()
+	void OnRep_UpdateUI();
+    
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 	void CallInteractMessage(AActor* OtherActor);
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void UpdateUI(int Count);
 
 protected:
 
@@ -60,6 +67,8 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+		
+	// Client RPC
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastAnimationReplication();
 	void MulticastAnimationReplication_Implementation();
@@ -76,7 +85,7 @@ protected:
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
-	
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -86,7 +95,6 @@ protected:
 
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
 
 public:
 	/** Returns CameraBoom subobject **/

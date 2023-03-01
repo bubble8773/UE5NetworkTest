@@ -24,5 +24,4 @@ class NETWORKEDABILITYTEST_API IInteractWithObjects
 public:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 	void Interacting();
-	
 };

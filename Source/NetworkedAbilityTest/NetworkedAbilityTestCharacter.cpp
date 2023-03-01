@@ -12,6 +12,7 @@
 #include "Net/UnrealNetwork.h"
 
 
+
 //////////////////////////////////////////////////////////////////////////
 // ANetworkedAbilityTestCharacter
 
@@ -51,10 +52,10 @@ ANetworkedAbilityTestCharacter::ANetworkedAbilityTestCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
-
 	SetReplicates(true);
 	SetReplicateMovement(true);
 	RepRootMotion.bIsActive = true;
+
 }
 
 void ANetworkedAbilityTestCharacter::BeginPlay()
@@ -72,7 +73,43 @@ void ANetworkedAbilityTestCharacter::BeginPlay()
 	}
 }
 
+void ANetworkedAbilityTestCharacter::Tick(float DeltaSeconds)
+{
+	NoInputTime -= DeltaSeconds;
+	if (NoInputTime < 0)
+		bDisableMovement = false;
+}
 
+//////////////////////////////////////////////////////////////////////////
+// Network
+
+void ANetworkedAbilityTestCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ANetworkedAbilityTestCharacter, AttackJumpMontage)
+	DOREPLIFETIME(ANetworkedAbilityTestCharacter, CollectedCount)
+}
+
+void ANetworkedAbilityTestCharacter::OnRep_UpdateUI()
+{
+	UpdateUI(CollectedCount);
+}
+void ANetworkedAbilityTestCharacter::MulticastAnimationReplication_Implementation()
+{
+	DoAttackJump();
+	ServerAnimationReplication();
+}
+
+void ANetworkedAbilityTestCharacter::ServerAnimationReplication_Implementation()
+{
+	DoAttackJump();
+	GetMesh()->GetAnimInstance()->SetRootMotionMode(ERootMotionMode::IgnoreRootMotion);
+}
+
+bool ANetworkedAbilityTestCharacter::ServerAnimationReplication_Validate()
+{
+	return true;
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -85,7 +122,7 @@ void ANetworkedAbilityTestCharacter::SetupPlayerInputComponent(class UInputCompo
 		//Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-		EnhancedInputComponent->BindAction(AttackJump, ETriggerEvent::Triggered, this, &ANetworkedAbilityTestCharacter::OnDoAttackJump);
+		EnhancedInputComponent->BindAction(JumpAttackAction, ETriggerEvent::Triggered, this, &ANetworkedAbilityTestCharacter::OnDoAttackJump);
 
 		//Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ANetworkedAbilityTestCharacter::Move);
@@ -133,54 +170,18 @@ void ANetworkedAbilityTestCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void ANetworkedAbilityTestCharacter::Tick(float DeltaSeconds)
-{
-	NoInputTime -= DeltaSeconds;
-	if (NoInputTime < 0)
-		bDisableMovement = false;
-}
 
 void ANetworkedAbilityTestCharacter::DoAttackJump()
 {
-	PlayAnimMontage(AttackJumpMontage);
+	if (AttackJumpMontage != NULL) {
+		PlayAnimMontage(AttackJumpMontage);
 
-	GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-	GetCharacterMovement()->Velocity = GetActorForwardVector() * 750 + FVector(0, 0, 250);
-	GetMesh()->GetAnimInstance()->SetRootMotionMode(ERootMotionMode::RootMotionFromEverything);
-	bDisableMovement = true;
-	NoInputTime = 5;
-}
-
-//////////////////////////////////////////////////////////////////////////
-// Network
-
-void ANetworkedAbilityTestCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ANetworkedAbilityTestCharacter, AttackJumpMontage)
-	DOREPLIFETIME(ANetworkedAbilityTestCharacter, CollectedCount)
-}
-void ANetworkedAbilityTestCharacter::MulticastAnimationReplication_Implementation()
-{
-	if (AttackJumpMontage != NULL)
-	{
-		DoAttackJump();
-		ServerAnimationReplication_Implementation();
+		GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+		GetCharacterMovement()->Velocity = GetActorForwardVector() * 750 + FVector(0, 0, 250);
+		GetMesh()->GetAnimInstance()->SetRootMotionMode(ERootMotionMode::RootMotionFromEverything);
+		bDisableMovement = true;
+		NoInputTime = 5;
 	}
-}
-
-void ANetworkedAbilityTestCharacter::ServerAnimationReplication_Implementation()
-{
-	if (AttackJumpMontage != NULL)
-	{
-		DoAttackJump();
-		GetMesh()->GetAnimInstance()->SetRootMotionMode(ERootMotionMode::IgnoreRootMotion);
-	}
-}
-
-bool ANetworkedAbilityTestCharacter::ServerAnimationReplication_Validate()
-{
-	return true;
 }
 
 void ANetworkedAbilityTestCharacter::OnDoAttackJump()
@@ -193,7 +194,6 @@ void ANetworkedAbilityTestCharacter::OnDoAttackJump()
 	{
 		MulticastAnimationReplication();
 	}
-
 }
 
 void ANetworkedAbilityTestCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -201,6 +201,9 @@ void ANetworkedAbilityTestCharacter::OnHit(UPrimitiveComponent* HitComponent, AA
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
 		CallInteractMessage(OtherActor);
-	
 	}
 }
+
+
+
+

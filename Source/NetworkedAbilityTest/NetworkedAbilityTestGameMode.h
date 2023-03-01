@@ -13,20 +13,21 @@ class ANetworkedAbilityTestGameMode : public AGameModeBase
 
 public:
 	ANetworkedAbilityTestGameMode();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+	int MaxActors;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Actors)
+	int CollectedActors;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Actors)
+	double viewDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Actors)
+	TArray<AActor*> ActorsToSpawn;
+
 	UFUNCTION(BlueprintCallable)
 	void FillWorld(TSubclassOf <AActor> ActorToSpawn, int max, FVector Origin, float radius);
-
+	
 	UFUNCTION(BlueprintCallable)
-	int GetCurrentActor_p();
-	UFUNCTION(BlueprintCallable)
-	void SetCurrentActor_p(int value);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite,  Category = UI)
-	int MaxActors;
-
-private:
-	//UPROPERTY( Replicated, Category = UI)
-	int CurrentActors;
+	void RenderBasedOnDistance(FVector PlayerLocation);
+		
 };
 
 
