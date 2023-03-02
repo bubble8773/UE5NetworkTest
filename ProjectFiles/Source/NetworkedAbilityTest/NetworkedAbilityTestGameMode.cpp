@@ -38,7 +38,7 @@ void ANetworkedAbilityTestGameMode::FillWorld(TSubclassOf<AActor> ActorToSpawn, 
 				
 			}
 		});*/
-		for (int i = 0; i <= max - 1; i++)
+		for (int i = 0;  i < max; i++)
 		{
 			if (navSystem->GetRandomReachablePointInRadius(Origin, radius, result)) {
 				ActorsToSpawn.Add(
@@ -58,9 +58,11 @@ bool ANetworkedAbilityTestGameMode::RenderBasedOnDistance(FVector PlayerLocation
 		//for(int i = 0; i <= ActorsToSpawn.Num()-1; i++)
 		double distance = FVector::Distance(PlayerLocation, ActorsToSpawn[i]->GetActorLocation());
 		ActorsToSpawn[i]->SetActorHiddenInGame(distance > ViewDistance);
-		if (distance < 10)
-			bIsHiddenByDistance = distance > ViewDistance;
-		
+		if (!(distance <= 10.0f)) {
+			if (distance > ViewDistance)
+				bIsHiddenByDistance = true;
+		}
+				
 	});
 	return bIsHiddenByDistance;
 }
